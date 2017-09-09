@@ -1,5 +1,5 @@
 var cubeRotation = 0.0;
-var chunk_width = 64, chunk_depth = 64, chunk_height = 24;
+var chunk_width = 64, chunk_depth = 64, chunk_height = 32;
 var vertCount = 0;
 var mode;
 var buffers;
@@ -35,14 +35,14 @@ var rng = RandomInt(-80000, 80000);
       var height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
       for(y = 0; y < chunk_height; y++){
 
-      	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = 10, size = 6;
+      	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = chunk_height * .5, size = 16;
       	var _y = y - offsetY, _x = x - offsetX, _z = z - offsetZ;
       	if(type == "Terrain")
       		voxels[x][y][z] = (height-y);
       	else if (type == "Sphere")
       		voxels[x][y][z] = 1.0-(Math.sqrt((x-offsetX)*(x-offsetX) + (y-offsetY)*(y-offsetY) + (z-offsetZ)*(z-offsetZ)) - size);
       	else if (type == "Torus")
-        	voxels[x][y][z] = 1.0-(Math.pow(6.0 - Math.sqrt(_x*_x + _y*_y), 2) + _z*_z - size);
+        	voxels[x][y][z] = 1.0-(Math.pow(10.0 - Math.sqrt(_x*_x + _y*_y), 2) + _z*_z - size);
       }
     }  
   }
@@ -359,25 +359,19 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
   const modelViewMatrix = mat4.create();
-
-  // Now move the drawing position a bit to where we want to
-  // start drawing the square.
+  
   mat4.translate(modelViewMatrix, 
                  modelViewMatrix,   
-                 [-chunk_width * .0, -10.0, -chunk_depth * 1]);
-     // axis to rotate around (Z)
+                 [-chunk_width * .0, 0.0, -chunk_depth * .75]);
 
-  mat4.rotate(modelViewMatrix,  // destination matrix
-              modelViewMatrix,  // matrix to rotate
-              20 * Math.PI / 180,// amount to rotate in radians
-              [1, 0, 0]);
+  mat4.multiply(modelViewMatrix, modelViewMatrix, mouseRotationMatrix);
+  
+  mat4.translate(modelViewMatrix, 
+                 modelViewMatrix,   
+                 [-chunk_width * .5, -chunk_height * .5, -chunk_depth * .0]);
 
-  mat4.rotate(modelViewMatrix,  // destination matrix
-              modelViewMatrix,  // matrix to rotate
-              90 * Math.PI / 180,// amount to rotate in radians
-              [0, 1, 0]);       // axis to rotate around (X)
+  
 
-mat4.multiply(modelViewMatrix, modelViewMatrix, mouseRotationMatrix);
   
 
   const normalMatrix = mat4.create();
