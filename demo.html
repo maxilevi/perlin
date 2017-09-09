@@ -6,17 +6,20 @@
   </head>
 
   <body>
-  	<select id="Shape">
-  	<option value="Torus">Torus</option>
-  		<option value="Sphere">Sphere</option>
-  		<option value="Terrain">Terrain</option>
-	  	
-	  	
-	  	
-	  	<option value="Empty">Empty</option>
+  	<select id="March" onchange="recreate();" style="position:absolute;top:15%;left:2.5%;">
+  		<option value="Marching Cubes">Marching Cubes</option>
   	</select>
-  	<button style="position:absolute; top:400px;" onclick="heightmap(); initBuffers(global_gl);">New</button>
-    <canvas id="glcanvas" style="width:100%;height:100%;" ></canvas>
+  	<select id="Shape" onchange="recreate();" style="position:absolute;top:25%;left:2.5%;">
+  		<option value="Goursat's Surface">Goursat's Surface</option>
+  		<option value="Eight Surface">Eight Surface</option>	
+  		<option value="Torus">Torus</option>
+  		<option value="Hyperelliptic">Hyperelliptic</option>
+  		<option value="Sphere">Sphere</option>
+	  	<option value="Klein's Bottle">Klein's Bottle</option>
+  	</select>
+
+
+    <canvas id="glcanvas" style="width:100%;height:40%;" ></canvas>
 
   </body>
 

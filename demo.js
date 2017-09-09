@@ -20,6 +20,11 @@ for(x = 0; x < chunk_width; x++){
 
 heightmap();
 
+function recreate(){
+	heightmap(); 
+	buffers = initBuffers(global_gl);
+}
+
 function RandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -32,7 +37,9 @@ var rng = RandomInt(-80000, 80000);
 
   for(x = 0; x < chunk_width; x++){
     for(z = 0; z < chunk_depth; z++){
-      var height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
+      var height = 0;
+	  if(type == "Terrain")
+      	height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
       for(y = 0; y < chunk_height; y++){
 
       	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = chunk_height * .5, size = 16;
@@ -40,13 +47,25 @@ var rng = RandomInt(-80000, 80000);
       	if(type == "Terrain")
       		voxels[x][y][z] = (height-y);
       	else if (type == "Sphere")
-      		voxels[x][y][z] = 1.0-(Math.sqrt((x-offsetX)*(x-offsetX) + (y-offsetY)*(y-offsetY) + (z-offsetZ)*(z-offsetZ)) - size);
+      		voxels[x][y][z] = 1.0-(Math.sqrt(_x*_x + _y*_y + _z*_z) - (size-4));
       	else if (type == "Torus")
         	voxels[x][y][z] = 1.0-(Math.pow(10.0 - Math.sqrt(_x*_x + _y*_y), 2) + _z*_z - size);
+        else if (type == "Hyperelliptic")
+        	voxels[x][y][z] = 1.0-(Math.pow( Math.pow(_x, 6) + Math.pow(_y, 6) + Math.pow(_z, 6), 1.0/6.0 ) - (size-8));
+        else if (type == "Goursat's Surface")
+        	voxels[x][y][z] = 1.0-(Math.pow(_x,4) + Math.pow(_y,4) + Math.pow(_z,4) - size * (_x*_x  + _y*_y + _z*_z) * 10 + 1.0);
+        else if(type == "Eight Surface")
+        	voxels[x][y][z] = 1.0-(2 * Math.pow(_z,4) + size*size * (_x*_x + _y*_y - 2 * _z*_z));
+        else if(type == "Klein's Bottle")
+        	 voxels[x][y][z] = 1.0-( (_x*_x+ _y*_y+ _z*_z - 16*_y - 1) * ( Math.pow(_x*_x+ _y*_y+ _z*_z - 2*_y - 1,2) -(256 * _z*_z) ) + 2 *_x * _z * (_x*_x+ _y*_y+ _z*_z - 2*_y - 1) * size );  
+
       }
     }  
   }
 }
+//http://mathworld.wolfram.com/EightSurface.html
+//http://mathworld.wolfram.com/GoursatsSurface.html
+//http://mathworld.wolfram.com/Ding-DongSurface.html
 
 var t1 = performance.now();
 
@@ -159,12 +178,11 @@ function initBuffers(gl) {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
 
-var time = 0, ctime = 0;
 var verts = [], norms = [];
 var result = new MData();
-for(x = 0; x < chunk_width; x++){
-  for(y = 0; y < chunk_height; y++){
-    for(z = 0; z < chunk_depth; z++){
+for(x = 0; x < chunk_width-1; x++){
+  for(y = 0; y < chunk_height-1; y++){
+    for(z = 0; z < chunk_depth-1; z++){
 
         var cell = new GridCell();
         cell.Density[0] = voxels[x][y][z];
@@ -305,10 +323,10 @@ function handleMouseMove(event) {
 	var deltaX = newX - lastMouseX;
 	var newRotationMatrix = mat4.create();
 	mat4.identity(newRotationMatrix);
-	mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad( -(deltaX / 10) ), [0, 1, 0]);
+	mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad( -(deltaX / 8) ), [0, 1, 0]);
 
 	var deltaY = newY - lastMouseY;
-	//mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(deltaY / 10), [1, 0, 0]);
+	mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(deltaY / 8), [1, 0, 0]);
 
 	mat4.multiply(mouseRotationMatrix, newRotationMatrix, mouseRotationMatrix);
 
@@ -323,7 +341,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   resize(gl.canvas);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-  gl.clearColor(0.8, 0.8, 0.8, 1.0);  // Clear to black, fully opaque
+  gl.clearColor(1, 1.0, 1.0, 1.0);  // Clear to black, fully opaque
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
