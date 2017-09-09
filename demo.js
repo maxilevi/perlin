@@ -1,5 +1,5 @@
 var cubeRotation = 0.0;
-var chunk_width = 64, chunk_depth = 64, chunk_height = 16;
+var chunk_width = 64, chunk_depth = 64, chunk_height = 24;
 var vertCount = 0;
 var mode;
 var buffers;
@@ -20,12 +20,29 @@ for(x = 0; x < chunk_width; x++){
 
 heightmap();
 
+function RandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
+}
+
 function heightmap(){
+var type = document.getElementById('Shape').value;
+var rng = RandomInt(-80000, 80000);
+
   for(x = 0; x < chunk_width; x++){
     for(z = 0; z < chunk_depth; z++){
-      var height = Math.abs(noise.simplex2(x * 0.025, z * 0.025)) * (chunk_height-1);
+      var height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
       for(y = 0; y < chunk_height; y++){
-        voxels[x][y][z] = (height-y);
+
+      	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = 10, size = 6;
+      	var _y = y - offsetY, _x = x - offsetX, _z = z - offsetZ;
+      	if(type == "Terrain")
+      		voxels[x][y][z] = (height-y);
+      	else if (type == "Sphere")
+      		voxels[x][y][z] = 1.0-(Math.sqrt((x-offsetX)*(x-offsetX) + (y-offsetY)*(y-offsetY) + (z-offsetZ)*(z-offsetZ)) - size);
+      	else if (type == "Torus")
+        	voxels[x][y][z] = 1.0-(Math.pow(6.0 - Math.sqrt(_x*_x + _y*_y), 2) + _z*_z - size);
       }
     }  
   }
@@ -141,6 +158,7 @@ function initBuffers(gl) {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
+
 var time = 0, ctime = 0;
 var verts = [], norms = [];
 var result = new MData();
@@ -188,10 +206,8 @@ for(x = 0; x < chunk_width; x++){
         for(k=0; k < cell.P.length; k++)
           cell.P[k] = [cell.P[k][0] , cell.P[k][1], cell.P[k][2] * 1 - chunk_width * .5];
 
-        var t0 = performance.now();
+        
         Process(0, cell, result);
-        var t1 = performance.now();
-        time += t1 - t0;
     }
   }  
 }
@@ -199,7 +215,7 @@ verts = result.vertices;
 norms = result.normals;
 
 
-console.log("marching cubes took "+time + " ms");
+
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
   // JavaScript array, then use it to fill the current buffer.
@@ -209,9 +225,12 @@ console.log("marching cubes took "+time + " ms");
 
   var colors = [];
 
-  for (var j = 0; j < verts.length / 3; j+=3) {
+  for (var j = 0; j < verts.length; j+=3) {
   var c = [ norms[j+0], norms[j+1], norms[j+2], 1.0]; 
-    colors = colors.concat(c);
+    colors.push(c[0]);
+    colors.push(c[1]);
+    colors.push(c[2]);
+    colors.push(c[3]);
   }
 
   const colorBuffer = gl.createBuffer();
@@ -238,10 +257,11 @@ console.log("marching cubes took "+time + " ms");
   ];*/
 
 var indices = [];
-for (var j = 0; j < verts.length; j++) {
+for (var j = 0; j < verts.length / 3; j++) {
   indices.push(j);
 }
-vertCount = colors.length / 4;
+vertCount = indices.length;
+
   // Now send the element array to GL
 
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
@@ -322,8 +342,8 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
 
   const fieldOfView = 60 * Math.PI / 180;   // in radians
   const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-  const zNear = 0.1;
-  const zFar = 100.0;
+  const zNear = 1;
+  const zFar = 400.0;
   const projectionMatrix = mat4.create();
 
   // note: glmatrix.js always has the first argument
@@ -344,7 +364,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   // start drawing the square.
   mat4.translate(modelViewMatrix, 
                  modelViewMatrix,   
-                 [0, -20.0, -chunk_width * 1]);
+                 [-chunk_width * .0, -10.0, -chunk_depth * 1]);
      // axis to rotate around (Z)
 
   mat4.rotate(modelViewMatrix,  // destination matrix
