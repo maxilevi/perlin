@@ -340,8 +340,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   gl.clearDepth(1.0);                 // Clear everything
   gl.enable(gl.DEPTH_TEST);           // Enable depth testing
   gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-  gl.enable(gl.CULL_FACE);
-  gl.cullFace(gl.FRONT);
+  gl.disable(gl.CULL_FACE);
 
   // Clear the canvas before we start drawing on it.
 
