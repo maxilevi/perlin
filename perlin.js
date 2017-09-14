@@ -412,7 +412,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   
   mat4.translate(modelViewMatrix, 
                  modelViewMatrix,   
-                 [-chunk_width * .5 * globalScale, -chunk_height * .15, -chunk_depth * .0]);
+                 [-chunk_width * .5 * globalScale, -chunk_height * .35, -chunk_depth * .0]);
 
   
 
