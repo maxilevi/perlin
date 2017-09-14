@@ -1,9 +1,10 @@
 var cubeRotation = 0.0;
-var chunk_width = 32, chunk_depth = 32, chunk_height = 32;
+var chunk_width = 48, chunk_depth = 48, chunk_height = 32;
 var vertCount = 0;
 var mode;
 var buffers;
 var global_gl;
+var globalScale = .65;
 
 
 var voxels = [];
@@ -42,6 +43,8 @@ function heightmap(){
   var noiseType = $('#noiseType').val();
   var scale = parseFloat( $('#scale').val() ), amplitude = parseFloat( $('#amplitude').val());
   var rng = $('#seed').val();
+    console.log(scale);
+
   noise.seed = rng;
 
   var t0 = performance.now();
@@ -51,10 +54,10 @@ function heightmap(){
       for(z = 0; z < chunk_depth; z++){
         var height = 0;
         if(noiseType == "Simplex Noise")
-          height = Math.abs(noise.simplex2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+          height = noise.simplex2( (x) * scale, (z) * scale) * amplitude + chunk_height * .5;
         
         else if(noiseType == "Perlin Noise")
-          height = Math.abs(noise.perlin2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+          height = noise.perlin2( (x) * scale, (z) * scale) * amplitude + chunk_height * .5;
         
         
         for(y = 0; y < chunk_height; y++){
@@ -75,7 +78,7 @@ function heightmap(){
     }
   }
   t1 = performance.now();
-  document.getElementById("timeSpent").innerHTML = "Calculation Time: "+(t1-t0).toFixed(3) + " MS";
+  document.getElementById("timeSpent").innerHTML = "Time: "+(t1-t0).toFixed(3) + " MS";
 
 }
 
@@ -252,6 +255,13 @@ for(x = 0; x < chunk_width-1; x++){
 verts = result.vertices;
 norms = result.normals;
 
+var globalScale = .65;
+  for(i = 0; i < verts.length; i+=3){
+    verts[i+0] *= globalScale;
+    verts[i+1] *= globalScale;
+    verts[i+2] *= globalScale;
+  }
+
 
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
@@ -402,7 +412,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
   
   mat4.translate(modelViewMatrix, 
                  modelViewMatrix,   
-                 [-chunk_width * .5, -chunk_height * .5, -chunk_depth * .0]);
+                 [-chunk_width * .5 * globalScale, -chunk_height * .15, -chunk_depth * .0]);
 
   
 
