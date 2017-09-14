@@ -44,15 +44,17 @@ function heightmap(){
   var rng = $('#seed').val();
   noise.seed = rng;
 
+  var t0 = performance.now();
+
   if(type == "2 Dimensions"){
     for(x = 0; x < chunk_width; x++){
       for(z = 0; z < chunk_depth; z++){
         var height = 0;
         if(noiseType == "Simplex Noise")
-          height = math.abs(noise.simplex2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+          height = Math.abs(noise.simplex2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
         
         else if(noiseType == "Perlin Noise")
-          height = math.abs(noise.perlin2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+          height = Math.abs(noise.perlin2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
         
         
         for(y = 0; y < chunk_height; y++){
@@ -72,6 +74,9 @@ function heightmap(){
       }  
     }
   }
+  t1 = performance.now();
+  document.getElementById("timeSpent").innerHTML = "Calculation Time: "+(t1-t0);
+
 }
 
 
