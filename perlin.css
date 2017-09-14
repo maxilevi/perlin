@@ -35,9 +35,12 @@
 	text-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
 }
 
-.time-spent{
-	font-weight:bold;
+.classy-text{
 	text-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
+}
+
+.bold{
+	font-weight:bold;
 }
 
 .source{
