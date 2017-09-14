@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Isosurface Demo</title>
+   
+    <!-- Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"></link>
+    <link rel="stylesheet" href="isosurface.css"></link>
+  </head>
+
+  <body>
+  	<h2 class = "ui title">Isosurface Polygonizer Algorithms</h2>
+  	<select id="isoMethod" onchange="recreate();" class="ui march selectpicker" data-style="btn-default">
+  		<option value="Marching Cubes">Marching Cubes</option>
+  		<option value="Marching Tetrahedra">Marching Tetrahedra</option>
+  	</select>
+  	<select id="shape" onchange="recreate();" class="ui shape selectpicker" data-style="btn-default">
+  		<option value="Goursat's Surface">Goursat's Surface</option>
+  		<option value="Eight Surface">Eight Surface</option>	
+  		<option value="Torus">Torus</option>
+  		<option value="Hyperelliptic">Hyperelliptic</option>
+  		<option value="Sphere">Sphere</option>
+	  	<option value="Klein's Bottle">Klein's Bottle</option>
+  	</select>
+  	<a href="https://github.com/Zaphyk/isosurface" target="_blank">
+	  	<i class="ui source fa fa-github" aria-hidden="true"></i>
+  	</a>
+
+    <canvas id="glcanvas" style="width:100%;height:40%;" ></canvas>
+
+  </body>
+
+
+  <script src="gl-matrix.js"></script>
+  <script src="noise.js"></script>
+  <script src="marchingclasses.js"></script>
+  <script src="marchingcubes.js"></script>
+  <script src="perlin.js"></script>
+</html>

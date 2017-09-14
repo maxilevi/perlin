@@ -1,10 +1,14 @@
-# perlin
-A webGL demo for testing perlin noise
+# isosurface
+webGL demo for testing isosurface techniques and math surfaces
 
 ## live demo
 
-[demo](https://luaek.com/demos/perlin) (not available yet)
+[demo](https://luaek.com/demos/isosurface)
 
 ## screenshots
 
-(none available yet)
+![](img/shot0.png)
+
+## license
+
+(c) 2017 MIT License. Maxi Levi

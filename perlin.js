@@ -1,310 +1,562 @@
-/*
- * A speed-improved perlin and simplex noise algorithms for 2D.
- *
- * Based on example code by Stefan Gustavson (stegu@itn.liu.se).
- * Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
- * Better rank ordering method by Stefan Gustavson in 2012.
- * Converted to Javascript by Joseph Gentle.
- *
- * Version 2012-03-09
- *
- * This code was placed in the public domain by its original author,
- * Stefan Gustavson. You may use it as you see fit, but
- * attribution is appreciated.
- *
- */
+var cubeRotation = 0.0;
+var chunk_width = 64, chunk_depth = 64, chunk_height = 32;
+var vertCount = 0;
+var mode;
+var buffers;
+var global_gl;
 
-(function(global){
-  var module = global.noise = {};
 
-  function Grad(x, y, z) {
-    this.x = x; this.y = y; this.z = z;
-  }
-  
-  Grad.prototype.dot2 = function(x, y) {
-    return this.x*x + this.y*y;
-  };
-
-  Grad.prototype.dot3 = function(x, y, z) {
-    return this.x*x + this.y*y + this.z*z;
-  };
-
-  var grad3 = [new Grad(1,1,0),new Grad(-1,1,0),new Grad(1,-1,0),new Grad(-1,-1,0),
-               new Grad(1,0,1),new Grad(-1,0,1),new Grad(1,0,-1),new Grad(-1,0,-1),
-               new Grad(0,1,1),new Grad(0,-1,1),new Grad(0,1,-1),new Grad(0,-1,-1)];
-
-  var p = [151,160,137,91,90,15,
-  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-  190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-  88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
-  77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-  102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
-  135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
-  5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-  223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
-  129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
-  251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
-  49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
-  // To remove the need for index wrapping, double the permutation table length
-  var perm = new Array(512);
-  var gradP = new Array(512);
-
-  // This isn't a very good seeding function, but it works ok. It supports 2^16
-  // different seed values. Write something better if you need more seeds.
-  module.seed = function(seed) {
-    if(seed > 0 && seed < 1) {
-      // Scale the seed out
-      seed *= 65536;
+var voxels = [];
+for(x = 0; x < chunk_width; x++){
+  voxels[x] = [];
+  for(y = 0; y < chunk_height; y++){
+    voxels[x][y] = [];
+    for(z = 0; z < chunk_depth; z++){
+      voxels[x][y][z] = 0;
     }
+  }  
+}
 
-    seed = Math.floor(seed);
-    if(seed < 256) {
-      seed |= seed << 8;
-    }
+heightmap();
 
-    for(var i = 0; i < 256; i++) {
-      var v;
-      if (i & 1) {
-        v = p[i] ^ (seed & 255);
-      } else {
-        v = p[i] ^ ((seed>>8) & 255);
+function recreate(){
+	heightmap(); 
+	buffers = initBuffers(global_gl);
+}
+
+function lerp(F1, F2, T){
+	return (1-T)*F1 + T*F2;
+}
+
+function RandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
+}
+
+function heightmap(){
+var type = $('#shape').val();
+//var rng = RandomInt(-80000, 80000);
+
+  for(x = 0; x < chunk_width; x++){
+    for(z = 0; z < chunk_depth; z++){
+      var height = 0;
+	  //if(type == "Terrain")
+      //	height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
+      for(y = 0; y < chunk_height; y++){
+
+      	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = chunk_height * .5, size = 16;
+      	var _y = y - offsetY, _x = x - offsetX, _z = z - offsetZ;
+      	//if(type == "Terrain")
+      	//	voxels[x][y][z] = (height-y);
+      	if (type == "Sphere")
+      		voxels[x][y][z] = 1.0-(Math.sqrt(_x*_x + _y*_y + _z*_z) - (size-4));
+      	else if (type == "Torus")
+        	voxels[x][y][z] = 1.0-(Math.pow(10.0 - Math.sqrt(_x*_x + _y*_y), 2) + _z*_z - size);
+        else if (type == "Hyperelliptic")
+        	voxels[x][y][z] = 1.0-(Math.pow( Math.pow(_x, 6) + Math.pow(_y, 6) + Math.pow(_z, 6), 1.0/6.5 ) - (size-6));
+        else if (type == "Goursat's Surface")
+        	voxels[x][y][z] = 1.0-(Math.pow(_x,4) + Math.pow(_y,4) + Math.pow(_z,4) - size * (_x*_x  + _y*_y + _z*_z) * 8 + 1.0);
+        else if(type == "Eight Surface")
+        	voxels[x][y][z] = 1.0-(2 * Math.pow(_z,4) + size*size * (_x*_x + _y*_y - 2 * _z*_z));
+        else if(type == "Klein's Bottle"){
+        	_y += 4;
+        	 voxels[x][y][z] = 1.0-( (_x*_x+ _y*_y+ _z*_z - 16*_y - 1) * ( Math.pow(_x*_x+ _y*_y+ _z*_z - 2*_y - 1,2) -(128 * _z*_z) ) + 2 *_x * _z * (_x*_x+ _y*_y+ _z*_z - 2*_y - 1) * size );  
+		}
       }
+    }  
+  }
+}
+//http://mathworld.wolfram.com/EightSurface.html
+//http://mathworld.wolfram.com/GoursatsSurface.html
+//http://mathworld.wolfram.com/Ding-DongSurface.html
 
-      perm[i] = perm[i + 256] = v;
-      gradP[i] = gradP[i + 256] = grad3[v % 12];
-    }
-  };
 
-  module.seed(0);
+main();
 
-  /*
-  for(var i=0; i<256; i++) {
-    perm[i] = perm[i + 256] = p[i];
-    gradP[i] = gradP[i + 256] = grad3[perm[i] % 12];
-  }*/
+//
+// Start here
+//
+var uints_for_indices;
+function main() {
+  const canvas = document.querySelector('#glcanvas');
+  const gl = canvas.getContext('webgl');
+  global_gl = gl;
+  mode = gl.TRIANGLES;
+  canvas.onmousedown = handleMouseDown;
+  document.onmouseup = handleMouseUp;
+  document.onmousemove = handleMouseMove;
+  uints_for_indices = gl.getExtension("OES_element_index_uint");
 
-  // Skewing and unskewing factors for 2, 3, and 4 dimensions
-  var F2 = 0.5*(Math.sqrt(3)-1);
-  var G2 = (3-Math.sqrt(3))/6;
+  // If we don't have a GL context, give up now
 
-  var F3 = 1/3;
-  var G3 = 1/6;
-
-  // 2D simplex noise
-  module.simplex2 = function(xin, yin) {
-    var n0, n1, n2; // Noise contributions from the three corners
-    // Skew the input space to determine which simplex cell we're in
-    var s = (xin+yin)*F2; // Hairy factor for 2D
-    var i = Math.floor(xin+s);
-    var j = Math.floor(yin+s);
-    var t = (i+j)*G2;
-    var x0 = xin-i+t; // The x,y distances from the cell origin, unskewed.
-    var y0 = yin-j+t;
-    // For the 2D case, the simplex shape is an equilateral triangle.
-    // Determine which simplex we are in.
-    var i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
-    if(x0>y0) { // lower triangle, XY order: (0,0)->(1,0)->(1,1)
-      i1=1; j1=0;
-    } else {    // upper triangle, YX order: (0,0)->(0,1)->(1,1)
-      i1=0; j1=1;
-    }
-    // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
-    // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
-    // c = (3-sqrt(3))/6
-    var x1 = x0 - i1 + G2; // Offsets for middle corner in (x,y) unskewed coords
-    var y1 = y0 - j1 + G2;
-    var x2 = x0 - 1 + 2 * G2; // Offsets for last corner in (x,y) unskewed coords
-    var y2 = y0 - 1 + 2 * G2;
-    // Work out the hashed gradient indices of the three simplex corners
-    i &= 255;
-    j &= 255;
-    var gi0 = gradP[i+perm[j]];
-    var gi1 = gradP[i+i1+perm[j+j1]];
-    var gi2 = gradP[i+1+perm[j+1]];
-    // Calculate the contribution from the three corners
-    var t0 = 0.5 - x0*x0-y0*y0;
-    if(t0<0) {
-      n0 = 0;
-    } else {
-      t0 *= t0;
-      n0 = t0 * t0 * gi0.dot2(x0, y0);  // (x,y) of grad3 used for 2D gradient
-    }
-    var t1 = 0.5 - x1*x1-y1*y1;
-    if(t1<0) {
-      n1 = 0;
-    } else {
-      t1 *= t1;
-      n1 = t1 * t1 * gi1.dot2(x1, y1);
-    }
-    var t2 = 0.5 - x2*x2-y2*y2;
-    if(t2<0) {
-      n2 = 0;
-    } else {
-      t2 *= t2;
-      n2 = t2 * t2 * gi2.dot2(x2, y2);
-    }
-    // Add contributions from each corner to get the final noise value.
-    // The result is scaled to return values in the interval [-1,1].
-    return 70 * (n0 + n1 + n2);
-  };
-
-  // 3D simplex noise
-  module.simplex3 = function(xin, yin, zin) {
-    var n0, n1, n2, n3; // Noise contributions from the four corners
-
-    // Skew the input space to determine which simplex cell we're in
-    var s = (xin+yin+zin)*F3; // Hairy factor for 2D
-    var i = Math.floor(xin+s);
-    var j = Math.floor(yin+s);
-    var k = Math.floor(zin+s);
-
-    var t = (i+j+k)*G3;
-    var x0 = xin-i+t; // The x,y distances from the cell origin, unskewed.
-    var y0 = yin-j+t;
-    var z0 = zin-k+t;
-
-    // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
-    // Determine which simplex we are in.
-    var i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
-    var i2, j2, k2; // Offsets for third corner of simplex in (i,j,k) coords
-    if(x0 >= y0) {
-      if(y0 >= z0)      { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; }
-      else if(x0 >= z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; }
-      else              { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; }
-    } else {
-      if(y0 < z0)      { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; }
-      else if(x0 < z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; }
-      else             { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; }
-    }
-    // A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
-    // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
-    // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
-    // c = 1/6.
-    var x1 = x0 - i1 + G3; // Offsets for second corner
-    var y1 = y0 - j1 + G3;
-    var z1 = z0 - k1 + G3;
-
-    var x2 = x0 - i2 + 2 * G3; // Offsets for third corner
-    var y2 = y0 - j2 + 2 * G3;
-    var z2 = z0 - k2 + 2 * G3;
-
-    var x3 = x0 - 1 + 3 * G3; // Offsets for fourth corner
-    var y3 = y0 - 1 + 3 * G3;
-    var z3 = z0 - 1 + 3 * G3;
-
-    // Work out the hashed gradient indices of the four simplex corners
-    i &= 255;
-    j &= 255;
-    k &= 255;
-    var gi0 = gradP[i+   perm[j+   perm[k   ]]];
-    var gi1 = gradP[i+i1+perm[j+j1+perm[k+k1]]];
-    var gi2 = gradP[i+i2+perm[j+j2+perm[k+k2]]];
-    var gi3 = gradP[i+ 1+perm[j+ 1+perm[k+ 1]]];
-
-    // Calculate the contribution from the four corners
-    var t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
-    if(t0<0) {
-      n0 = 0;
-    } else {
-      t0 *= t0;
-      n0 = t0 * t0 * gi0.dot3(x0, y0, z0);  // (x,y) of grad3 used for 2D gradient
-    }
-    var t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
-    if(t1<0) {
-      n1 = 0;
-    } else {
-      t1 *= t1;
-      n1 = t1 * t1 * gi1.dot3(x1, y1, z1);
-    }
-    var t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
-    if(t2<0) {
-      n2 = 0;
-    } else {
-      t2 *= t2;
-      n2 = t2 * t2 * gi2.dot3(x2, y2, z2);
-    }
-    var t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
-    if(t3<0) {
-      n3 = 0;
-    } else {
-      t3 *= t3;
-      n3 = t3 * t3 * gi3.dot3(x3, y3, z3);
-    }
-    // Add contributions from each corner to get the final noise value.
-    // The result is scaled to return values in the interval [-1,1].
-    return 32 * (n0 + n1 + n2 + n3);
-
-  };
-
-  // ##### Perlin noise stuff
-
-  function fade(t) {
-    return t*t*t*(t*(t*6-15)+10);
+  if (!gl) {
+    alert('Unable to initialize WebGL. Your browser or machine may not support it.');
+    return;
   }
 
-  function lerp(a, b, t) {
-    return (1-t)*a + t*b;
+  // Vertex shader program
+
+  const vsSource = `
+    attribute vec3 aVertexPosition;
+    attribute vec4 aVertexColor;
+
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+    uniform mat4 uNormalMatrix;
+
+    varying lowp vec4 vColor;
+
+    void main(void) {
+      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1);
+      vColor = vec4( mat3(uNormalMatrix) * aVertexColor.xyz, 1);
+    }
+  `;
+
+  // Fragment shader program
+
+  const fsSource = `
+    varying lowp vec4 vColor;
+
+    void main(void) {
+      gl_FragColor = vec4( (vColor.xyz + vec3(1,1,1) ) * .5, 1);
+    }
+  `;
+
+  // Initialize a shader program; this is where all the lighting
+  // for the vertices and so forth is established.
+  const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+  // Collect all the info needed to use the shader program.
+  // Look up which attributes our shader program is using
+  // for aVertexPosition, aVevrtexColor and also
+  // look up uniform locations.
+  const programInfo = {
+    program: shaderProgram,
+    attribLocations: {
+      vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+      vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+
+    },
+    uniformLocations: {
+      projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+      modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+      normalMatrix: gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
+    },
+  };
+
+  // Here's where we call the routine that builds all the
+  // objects we'll be drawing.
+  buffers = initBuffers(gl);
+
+  var then = 0;
+
+  // Draw the scene repeatedly
+  function render(now) {
+    now *= 0.001;  // convert to seconds
+    const deltaTime = now - then;
+    then = now;
+	
+	velocityX = lerp(velocityX, 0, deltaTime * 6);
+	velocityY = lerp(velocityY, 0, deltaTime * 6);
+
+	var newRotationMatrix = mat4.create();
+	mat4.identity(newRotationMatrix);
+	mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad( -(velocityX / 16) ), [0, 1, 0]);
+	mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(velocityY / 16), [1, 0, 0]);
+	mat4.multiply(mouseRotationMatrix, newRotationMatrix, mouseRotationMatrix);
+
+    drawScene(gl, programInfo, buffers, deltaTime);
+
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+}
+
+//
+// initBuffers
+//
+// Initialize the buffers we'll need. For this demo, we just
+// have one object -- a simple three-dimensional cube.
+//
+function initBuffers(gl) {
+
+  // Create a buffer for the cube's vertex positions.
+
+  const positionBuffer = gl.createBuffer();
+
+  // Select the positionBuffer as the one to apply buffer
+  // operations to from here out.
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+
+var verts = [], norms = [];
+var result = new MData();
+var marchType = $("#isoMethod").val();
+for(x = 0; x < chunk_width-1; x++){
+  for(y = 0; y < chunk_height-1; y++){
+    for(z = 0; z < chunk_depth-1; z++){
+
+        var cell = new GridCell();
+        cell.Density[0] = voxels[x][y][z];
+        cell.P[0] = [x, y, z];
+        cell.P[1] = [x+1, y, z];
+        cell.P[2] = [x+1, y, z+1];
+        cell.P[3] = [x, y, z+1];
+        cell.P[4] = [x, y+1, z];
+        cell.P[5] = [x+1, y+1, z];
+        cell.P[6] = [x+1, y+1, z+1];
+        cell.P[7] = [x, y+1, z+1];
+
+        if(x < chunk_width-1)
+          cell.Density[1] = voxels[x+1][y][z];
+        
+
+        if(x < chunk_width-1 && z < chunk_width-1)
+          cell.Density[2] = voxels[x+1][y][z+1];
+        
+
+        if(z < chunk_width-1)
+          cell.Density[3] = voxels[x][y][z+1];
+
+        if(y < chunk_height-1)
+          cell.Density[4] = voxels[x][y+1][z];
+      
+
+        if(x < chunk_width-1 && y < chunk_height-1)
+          cell.Density[5] =  voxels[x+1][y+1][z];
+
+        if(x < chunk_width-1 && y < chunk_height-1 && z < chunk_width-1)
+          cell.Density[6] = voxels[x+1][y+1][z+1];
+        
+
+        if(z < chunk_width-1 && y < chunk_height-1)
+          cell.Density[7] =  voxels[x][y+1][z+1];
+          
+        
+        for(k=0; k < cell.P.length; k++)
+          cell.P[k] = [cell.P[k][0] , cell.P[k][1], cell.P[k][2] * 1 - chunk_width * .5];
+
+        if(marchType == "Marching Cubes")
+       		MarchCube(0, cell, result);
+       	else if(marchType == "Marching Tetrahedra")
+       		MarchTetrahedra(0, cell, result);
+    }
+  }  
+}
+verts = result.vertices;
+norms = result.normals;
+console.log(verts);
+
+
+  // Now pass the list of positions into WebGL to build the
+  // shape. We do this by creating a Float32Array from the
+  // JavaScript array, then use it to fill the current buffer.
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW);
+
+
+  var colors = [];
+
+  for (var j = 0; j < verts.length; j+=3) {
+  var c = [ norms[j+0], norms[j+1], norms[j+2], 1.0]; 
+    colors.push( (c[0] ) * 1);
+    colors.push( (c[1] ) * 1);
+    colors.push( (c[2] ) * 1);
+    colors.push(c[3]);
   }
 
-  // 2D Perlin Noise
-  module.perlin2 = function(x, y) {
-    // Find unit grid cell containing point
-    var X = Math.floor(x), Y = Math.floor(y);
-    // Get relative xy coordinates of point within that cell
-    x = x - X; y = y - Y;
-    // Wrap the integer cells at 255 (smaller integer period can be introduced here)
-    X = X & 255; Y = Y & 255;
+  const colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-    // Calculate noise contributions from each of the four corners
-    var n00 = gradP[X+perm[Y]].dot2(x, y);
-    var n01 = gradP[X+perm[Y+1]].dot2(x, y-1);
-    var n10 = gradP[X+1+perm[Y]].dot2(x-1, y);
-    var n11 = gradP[X+1+perm[Y+1]].dot2(x-1, y-1);
+  // Build the element array buffer; this specifies the indices
+  // into the vertex arrays for each face's vertices.
 
-    // Compute the fade curve value for x
-    var u = fade(x);
+  const indexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-    // Interpolate the four results
-    return lerp(
-        lerp(n00, n10, u),
-        lerp(n01, n11, u),
-       fade(y));
+  // This array defines each face as two triangles, using the
+  // indices into the vertex array to specify each triangle's
+  // position.
+
+  /*const indices = [
+    0,  1,  2,      0,  2,  3,    // front
+    4,  5,  6,      4,  6,  7,    // back
+    8,  9,  10,     8,  10, 11,   // top
+    12, 13, 14,     12, 14, 15,   // bottom
+    16, 17, 18,     16, 18, 19,   // right
+    20, 21, 22,     20, 22, 23,   // left
+  ];*/
+
+var indices = [];
+for (var j = 0; j < verts.length / 3; j++) {
+  indices.push(j);
+}
+vertCount = indices.length;
+
+  // Now send the element array to GL
+var array;
+if(uints_for_indices != null)
+	array = new Uint32Array(indices);
+else
+	array = new Uint16Array(indices)
+
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+       array, gl.STATIC_DRAW);
+
+  return {
+    position: positionBuffer,
+    color: colorBuffer,
+    indices: indexBuffer,
   };
+}
 
-  // 3D Perlin Noise
-  module.perlin3 = function(x, y, z) {
-    // Find unit grid cell containing point
-    var X = Math.floor(x), Y = Math.floor(y), Z = Math.floor(z);
-    // Get relative xyz coordinates of point within that cell
-    x = x - X; y = y - Y; z = z - Z;
-    // Wrap the integer cells at 255 (smaller integer period can be introduced here)
-    X = X & 255; Y = Y & 255; Z = Z & 255;
+var mouseDown = false;
+var lastMouseX = null;
+var lastMouseY = null;
 
-    // Calculate noise contributions from each of the eight corners
-    var n000 = gradP[X+  perm[Y+  perm[Z  ]]].dot3(x,   y,     z);
-    var n001 = gradP[X+  perm[Y+  perm[Z+1]]].dot3(x,   y,   z-1);
-    var n010 = gradP[X+  perm[Y+1+perm[Z  ]]].dot3(x,   y-1,   z);
-    var n011 = gradP[X+  perm[Y+1+perm[Z+1]]].dot3(x,   y-1, z-1);
-    var n100 = gradP[X+1+perm[Y+  perm[Z  ]]].dot3(x-1,   y,   z);
-    var n101 = gradP[X+1+perm[Y+  perm[Z+1]]].dot3(x-1,   y, z-1);
-    var n110 = gradP[X+1+perm[Y+1+perm[Z  ]]].dot3(x-1, y-1,   z);
-    var n111 = gradP[X+1+perm[Y+1+perm[Z+1]]].dot3(x-1, y-1, z-1);
+var mouseRotationMatrix = mat4.create();
+mat4.identity(mouseRotationMatrix);
 
-    // Compute the fade curve value for x, y, z
-    var u = fade(x);
-    var v = fade(y);
-    var w = fade(z);
+function degToRad(a){
+	return a * Math.PI / 180;
+}
 
-    // Interpolate
-    return lerp(
-        lerp(
-          lerp(n000, n100, u),
-          lerp(n001, n101, u), w),
-        lerp(
-          lerp(n010, n110, u),
-          lerp(n011, n111, u), w),
-       v);
-  };
+function handleMouseDown(event) {
+	mouseDown = true;
+	lastMouseX = event.clientX;
+	lastMouseY = event.clientY;
+}
 
-})(this);
+function handleMouseUp(event) {
+mouseDown = false;
+}
+
+var velocityX = 0, velocityY = 0;
+function handleMouseMove(event) {
+	if (!mouseDown) {
+	  return;
+	}
+	var newX = event.clientX;
+	var newY = event.clientY;
+
+	var deltaX = newX - lastMouseX;
+	var deltaY = newY - lastMouseY;
+	velocityX += deltaX;
+	velocityY += deltaY; 
+
+	lastMouseX = newX
+	lastMouseY = newY;
+}
+
+//
+// Draw the scene.
+//
+function drawScene(gl, programInfo, buffers, deltaTime) {
+  resize(gl.canvas);
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+  gl.clearColor(1, 1.0, 1.0, 1.0);  // Clear to black, fully opaque
+  gl.clearDepth(1.0);                 // Clear everything
+  gl.enable(gl.DEPTH_TEST);           // Enable depth testing
+  gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.FRONT);
+
+  // Clear the canvas before we start drawing on it.
+
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // Create a perspective matrix, a special matrix that is
+  // used to simulate the distortion of perspective in a camera.
+  // Our field of view is 45 degrees, with a width/height
+  // ratio that matches the display size of the canvas
+  // and we only want to see objects between 0.1 units
+  // and 100 units away from the camera.
+
+  const fieldOfView = 60 * Math.PI / 180;   // in radians
+  const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+  const zNear = 1;
+  const zFar = 400.0;
+  const projectionMatrix = mat4.create();
+
+  // note: glmatrix.js always has the first argument
+  // as the destination to receive the result.
+  mat4.perspective(projectionMatrix,
+                   fieldOfView,
+                   aspect,
+                   zNear,
+                   zFar);
+
+
+
+  // Set the drawing position to the "identity" point, which is
+  // the center of the scene.
+  const modelViewMatrix = mat4.create();
+  
+  mat4.translate(modelViewMatrix, 
+                 modelViewMatrix,   
+                 [-chunk_width * .0, 0.0, -chunk_depth * .75]);
+
+  mat4.multiply(modelViewMatrix, modelViewMatrix, mouseRotationMatrix);
+  
+  mat4.translate(modelViewMatrix, 
+                 modelViewMatrix,   
+                 [-chunk_width * .5, -chunk_height * .5, -chunk_depth * .0]);
+
+  
+
+  
+
+  const normalMatrix = mat4.create();
+
+  mat4.invert(normalMatrix, modelViewMatrix);
+  mat4.transpose(normalMatrix, normalMatrix);
+
+  // Tell WebGL how to pull out the positions from the position
+  // buffer into the vertexPosition attribute
+  {
+    const numComponents = 3;
+    const type = gl.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+    gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexPosition,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset);
+    gl.enableVertexAttribArray(
+        programInfo.attribLocations.vertexPosition);
+  }
+
+  // Tell WebGL how to pull out the colors from the color buffer
+  // into the vertexColor attribute.
+  {
+    const numComponents = 4;
+    const type = gl.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+    gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexColor,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset);
+    gl.enableVertexAttribArray(
+        programInfo.attribLocations.vertexColor);
+  }
+
+  // Tell WebGL which indices to use to index the vertices
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+
+  // Tell WebGL to use our program when drawing
+
+  gl.useProgram(programInfo.program);
+
+  // Set the shader uniforms
+
+  gl.uniformMatrix4fv(
+      programInfo.uniformLocations.projectionMatrix,
+      false,
+      projectionMatrix);
+  gl.uniformMatrix4fv(
+      programInfo.uniformLocations.modelViewMatrix,
+      false,
+      modelViewMatrix)
+  gl.uniformMatrix4fv(
+      programInfo.uniformLocations.normalMatrix,
+      false,
+      normalMatrix);
+
+  {
+
+    const type = (uints_for_indices == null) ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT;
+    const offset = 0;
+    gl.drawElements(mode, vertCount, type, offset);
+  }
+
+  // Update the rotation for the next draw
+
+  cubeRotation += deltaTime;
+}
+
+//
+// Initialize a shader program, so WebGL knows how to draw our data
+//
+function initShaderProgram(gl, vsSource, fsSource) {
+  const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+  // Create the shader program
+
+  const shaderProgram = gl.createProgram();
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
+
+  // If creating the shader program failed, alert
+
+  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+    alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+    return null;
+  }
+
+  return shaderProgram;
+}
+
+function wireframe(gl){
+  if(mode == gl.LINE_STRIP)
+    mode = gl.TRIANGLES;
+  else
+    mode = gl.LINE_STRIP;
+}
+
+//
+// creates a shader of the given type, uploads the source and
+// compiles it.
+//
+function loadShader(gl, type, source) {
+  const shader = gl.createShader(type);
+
+  // Send the source to the shader object
+
+  gl.shaderSource(shader, source);
+
+  // Compile the shader program
+
+  gl.compileShader(shader);
+
+  // See if it compiled successfully
+
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+
+  return shader;
+}
+
+function resize(canvas) {
+  // Lookup the size the browser is displaying the canvas.
+  var displayWidth  = canvas.clientWidth;
+  var displayHeight = canvas.clientHeight;
+ 
+  // Check if the canvas is not the same size.
+  if (canvas.width  != displayWidth ||
+      canvas.height != displayHeight) {
+ 
+    // Make the canvas the same size
+    canvas.width  = displayWidth;
+    canvas.height = displayHeight;
+  }
+}
