@@ -87,7 +87,6 @@ function main() {
   canvas.onmousedown = handleMouseDown;
   document.onmouseup = handleMouseUp;
   document.onmousemove = handleMouseMove;
-  uints_for_indices = gl.getExtension("OES_element_index_uint");
 
   // If we don't have a GL context, give up now
 
@@ -294,11 +293,7 @@ for (var j = 0; j < verts.length / 3; j++) {
 vertCount = indices.length;
 
   // Now send the element array to GL
-var array;
-if(uints_for_indices != null)
-	array = new Uint32Array(indices);
-else
-	array = new Uint16Array(indices)
+var array = new Uint16Array(indices)
 
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
        array, gl.STATIC_DRAW);
@@ -475,7 +470,7 @@ function drawScene(gl, programInfo, buffers, deltaTime) {
 
   {
 
-    const type = (uints_for_indices == null) ? gl.UNSIGNED_SHORT : gl.UNSIGNED_INT;
+    const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawElements(mode, vertCount, type, offset);
   }
