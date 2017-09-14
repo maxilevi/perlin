@@ -75,7 +75,7 @@ function heightmap(){
     }
   }
   t1 = performance.now();
-  document.getElementById("timeSpent").innerHTML = "Calculation Time: "+(t1-t0);
+  document.getElementById("timeSpent").innerHTML = "Calculation Time: "+(t1-t0).toFixed(3) + " MS";
 
 }
 
