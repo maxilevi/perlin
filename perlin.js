@@ -71,6 +71,7 @@ function heightmap(){
         for(y = 0; y < chunk_height; y++){
           if(noiseType == "Simplex Noise")
             voxels[x][y][z] = noise.simplex3( x * scale, y * scale, z * scale) * amplitude;
+          
           else if(noiseType == "Perlin Noise")
             voxels[x][y][z] = noise.perlin3( x * scale, y * scale, z * scale) * amplitude;
         }
