@@ -1,9 +1,9 @@
 # isosurface
-webGL demo for testing isosurface techniques and math surfaces
+webGL demo for testing perlin noise in realtime
 
 ## live demo
 
-[demo](https://luaek.com/demos/isosurface)
+[demo](https://luaek.com/demos/perlin)
 
 ## screenshots
 
