@@ -36,40 +36,22 @@ function RandomInt(min, max) {
 
 function heightmap(){
 var type = $('#shape').val();
-//var rng = RandomInt(-80000, 80000);
+var rng = RandomInt(-80000, 80000);
 
   for(x = 0; x < chunk_width; x++){
     for(z = 0; z < chunk_depth; z++){
-      var height = 0;
-	  //if(type == "Terrain")
-      //	height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
       for(y = 0; y < chunk_height; y++){
 
       	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = chunk_height * .5, size = 16;
       	var _y = y - offsetY, _x = x - offsetX, _z = z - offsetZ;
-      	//if(type == "Terrain")
-      	//	voxels[x][y][z] = (height-y);
-      	if (type == "Sphere")
-      		voxels[x][y][z] = 1.0-(Math.sqrt(_x*_x + _y*_y + _z*_z) - (size-4));
-      	else if (type == "Torus")
-        	voxels[x][y][z] = 1.0-(Math.pow(10.0 - Math.sqrt(_x*_x + _y*_y), 2) + _z*_z - size);
-        else if (type == "Hyperelliptic")
-        	voxels[x][y][z] = 1.0-(Math.pow( Math.pow(_x, 6) + Math.pow(_y, 6) + Math.pow(_z, 6), 1.0/6.5 ) - (size-6));
-        else if (type == "Goursat's Surface")
-        	voxels[x][y][z] = 1.0-(Math.pow(_x,4) + Math.pow(_y,4) + Math.pow(_z,4) - size * (_x*_x  + _y*_y + _z*_z) * 8 + 1.0);
-        else if(type == "Eight Surface")
-        	voxels[x][y][z] = 1.0-(2 * Math.pow(_z,4) + size*size * (_x*_x + _y*_y - 2 * _z*_z));
-        else if(type == "Klein's Bottle"){
-        	_y += 4;
-        	 voxels[x][y][z] = 1.0-( (_x*_x+ _y*_y+ _z*_z - 16*_y - 1) * ( Math.pow(_x*_x+ _y*_y+ _z*_z - 2*_y - 1,2) -(128 * _z*_z) ) + 2 *_x * _z * (_x*_x+ _y*_y+ _z*_z - 2*_y - 1) * size );  
-		}
+        var height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
+
+      	voxels[x][y][z] = (height-y); 
       }
     }  
   }
 }
-//http://mathworld.wolfram.com/EightSurface.html
-//http://mathworld.wolfram.com/GoursatsSurface.html
-//http://mathworld.wolfram.com/Ding-DongSurface.html
+
 
 
 main();
@@ -193,7 +175,6 @@ function initBuffers(gl) {
 
 var verts = [], norms = [];
 var result = new MData();
-var marchType = $("#isoMethod").val();
 for(x = 0; x < chunk_width-1; x++){
   for(y = 0; y < chunk_height-1; y++){
     for(z = 0; z < chunk_depth-1; z++){
@@ -238,10 +219,7 @@ for(x = 0; x < chunk_width-1; x++){
         for(k=0; k < cell.P.length; k++)
           cell.P[k] = [cell.P[k][0] , cell.P[k][1], cell.P[k][2] * 1 - chunk_width * .5];
 
-        if(marchType == "Marching Cubes")
        		MarchCube(0, cell, result);
-       	else if(marchType == "Marching Tetrahedra")
-       		MarchTetrahedra(0, cell, result);
     }
   }  
 }

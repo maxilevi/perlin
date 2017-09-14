@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Isosurface Demo</title>
+    <title>Perlin Noise Demo</title>
    
     <!-- Bootstrap -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
@@ -13,24 +13,19 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"></link>
-    <link rel="stylesheet" href="isosurface.css"></link>
+    <link rel="stylesheet" href="perlin.css"></link>
   </head>
 
   <body>
-  	<h2 class = "ui title">Isosurface Polygonizer Algorithms</h2>
-  	<select id="isoMethod" onchange="recreate();" class="ui march selectpicker" data-style="btn-default">
-  		<option value="Marching Cubes">Marching Cubes</option>
-  		<option value="Marching Tetrahedra">Marching Tetrahedra</option>
-  	</select>
-  	<select id="shape" onchange="recreate();" class="ui shape selectpicker" data-style="btn-default">
-  		<option value="Goursat's Surface">Goursat's Surface</option>
-  		<option value="Eight Surface">Eight Surface</option>	
-  		<option value="Torus">Torus</option>
-  		<option value="Hyperelliptic">Hyperelliptic</option>
-  		<option value="Sphere">Sphere</option>
-	  	<option value="Klein's Bottle">Klein's Bottle</option>
-  	</select>
-  	<a href="https://github.com/Zaphyk/isosurface" target="_blank">
+  	<h2 class = "ui title">Perlin Noise</h2>
+    <select id="dimensions" onchange="recreate();" class="ui dimensions selectpicker" data-style="btn-default">
+      <option value="2 Dimensional">2 Dimensional</option>
+      <option value="3 Dimensional">3 Dimensional</option>
+    </select>
+  	<input type="text" id="scaleX" class="ui scaleX"></input>
+    <input type="text" id="scaleY" class="ui scaleY"></input>
+    <input type="text" id="scaleZ" class="ui scaleZ"></input>
+  	<a href="https://github.com/Zaphyk/perlin" target="_blank">
 	  	<i class="ui source fa fa-github" aria-hidden="true"></i>
   	</a>
 

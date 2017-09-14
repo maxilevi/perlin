@@ -3,19 +3,28 @@
 	left:2.5%;
 }
 
-.march{
-	top:15%;
-	box-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
+.scaleX{
+	top:25%;
+
 }
 
-.shape{
-	top:25%;
-	box-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
+.scaleY{
+	top:35%;
+
+}
+
+.scaleZ{
+	top:45%;
+
+}
+
+.dimensions{
+	top:15%;
 }
 
 .title{
 	text-align: center;
-	left:33%;
+	left:44%;
 	text-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
 }
 
