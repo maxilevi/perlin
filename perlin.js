@@ -1,5 +1,5 @@
 var cubeRotation = 0.0;
-var chunk_width = 64, chunk_depth = 64, chunk_height = 32;
+var chunk_width = 32, chunk_depth = 32, chunk_height = 32;
 var vertCount = 0;
 var mode;
 var buffers;
@@ -40,31 +40,34 @@ function RandomInt(min, max) {
 function heightmap(){
   var type = $('#dimension').val();
   var noiseType = $('#noiseType').val();
-  var scale = $('#scale').val(), amplitude = $('#amplitude').val();
+  var scale = parseFloat( $('#scale').val() ), amplitude = parseFloat( $('#amplitude').val());
   var rng = $('#seed').val();
   noise.seed = rng;
 
-  if(type == "2 Dimensional"){
+  if(type == "2 Dimensions"){
     for(x = 0; x < chunk_width; x++){
       for(z = 0; z < chunk_depth; z++){
         var height = 0;
         if(noiseType == "Simplex Noise")
-          height = Math.abs(noise.simplex2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+          height = math.abs(noise.simplex2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+        
         else if(noiseType == "Perlin Noise")
-          height = Math.abs(noise.perlin2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+          height = math.abs(noise.perlin2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+        
+        
         for(y = 0; y < chunk_height; y++){
         	voxels[x][y][z] = (height-y); 
         }
       }  
     }
-  }else if("3 Dimensional"){
+  }else if("3 Dimensions"){
     for(x = 0; x < chunk_width; x++){
       for(z = 0; z < chunk_depth; z++){
         for(y = 0; y < chunk_height; y++){
           if(noiseType == "Simplex Noise")
-            voxels[x][y][z] = Math.abs(noise.simplex3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale)) * amplitude;
+            voxels[x][y][z] = noise.simplex3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale) * amplitude;
           else if(noiseType == "Perlin Noise")
-            voxels[x][y][z] = Math.abs(noise.perlin3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale)) * amplitude;
+            voxels[x][y][z] = noise.perlin3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale) * amplitude;
         }
       }  
     }
@@ -237,13 +240,12 @@ for(x = 0; x < chunk_width-1; x++){
         for(k=0; k < cell.P.length; k++)
           cell.P[k] = [cell.P[k][0] , cell.P[k][1], cell.P[k][2] * 1 - chunk_width * .5];
 
-       		MarchCube(0, cell, result);
+       	MarchCube(0, cell, result);
     }
   }  
 }
 verts = result.vertices;
 norms = result.normals;
-console.log(verts);
 
 
   // Now pass the list of positions into WebGL to build the
