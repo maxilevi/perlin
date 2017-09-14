@@ -19,6 +19,9 @@ for(x = 0; x < chunk_width; x++){
 
 heightmap();
 
+var rng = RandomInt(-8000000, 8000000);
+document.getElementById('seed').value = rng;
+
 function recreate(){
 	heightmap(); 
 	buffers = initBuffers(global_gl);
@@ -36,22 +39,32 @@ function RandomInt(min, max) {
 
 function heightmap(){
   var type = $('#dimension').val();
-  var rng = RandomInt(-80000, 80000);
+  var noiseType = $('#noiseType').val();
+  var scale = $('#scale').val(), amplitude = $('#amplitude').val();
+  var rng = $('#seed').val();
+  noise.seed = rng;
 
-  if(type == "2 Dimensional")
+  if(type == "2 Dimensional"){
     for(x = 0; x < chunk_width; x++){
       for(z = 0; z < chunk_depth; z++){
-        var height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
+        var height = 0;
+        if(noiseType == "Simplex Noise")
+          height = Math.abs(noise.simplex2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
+        else if(noiseType == "Perlin Noise")
+          height = Math.abs(noise.perlin2( (x+rng) * scale, (z+rng) * scale)) * amplitude;
         for(y = 0; y < chunk_height; y++){
         	voxels[x][y][z] = (height-y); 
         }
       }  
     }
-  }else if("2 Dimensional"){
+  }else if("3 Dimensional"){
     for(x = 0; x < chunk_width; x++){
       for(z = 0; z < chunk_depth; z++){
         for(y = 0; y < chunk_height; y++){
-          voxels[x][y][z] = Math.abs(noise.simplex3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale)); 
+          if(noiseType == "Simplex Noise")
+            voxels[x][y][z] = Math.abs(noise.simplex3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale)) * amplitude;
+          else if(noiseType == "Perlin Noise")
+            voxels[x][y][z] = Math.abs(noise.perlin3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale)) * amplitude;
         }
       }  
     }
