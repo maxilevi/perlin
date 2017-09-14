@@ -19,6 +19,7 @@
 
 .noiseType{
 	top:15%;
+	box-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
 }
 
 .stats{
@@ -27,6 +28,7 @@
 
 .dimensions{
 	top:25%;
+	box-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
 }
 
 .title{

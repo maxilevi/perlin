@@ -1,10 +1,10 @@
 var cubeRotation = 0.0;
-var chunk_width = 48, chunk_depth = 48, chunk_height = 32;
+var chunk_width = 32, chunk_depth = 32, chunk_height = 32;
 var vertCount = 0;
 var mode;
 var buffers;
 var global_gl;
-var globalScale = .65;
+var globalScale = .55;
 
 
 var voxels = [];
@@ -54,10 +54,10 @@ function heightmap(){
       for(z = 0; z < chunk_depth; z++){
         var height = 0;
         if(noiseType == "Simplex Noise")
-          height = noise.simplex2( (x) * scale, (z) * scale) * amplitude + chunk_height * .5;
+          height = noise.simplex2( x * scale, z * scale) * amplitude + chunk_height * .5;
         
         else if(noiseType == "Perlin Noise")
-          height = noise.perlin2( (x) * scale, (z) * scale) * amplitude + chunk_height * .5;
+          height = noise.perlin2( x * scale, z * scale) * amplitude + chunk_height * .5;
         
         
         for(y = 0; y < chunk_height; y++){
@@ -70,9 +70,9 @@ function heightmap(){
       for(z = 0; z < chunk_depth; z++){
         for(y = 0; y < chunk_height; y++){
           if(noiseType == "Simplex Noise")
-            voxels[x][y][z] = noise.simplex3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale) * amplitude;
+            voxels[x][y][z] = noise.simplex3( x * scale, y * scale, z * scale) * amplitude;
           else if(noiseType == "Perlin Noise")
-            voxels[x][y][z] = noise.perlin3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale) * amplitude;
+            voxels[x][y][z] = noise.perlin3( x * scale, y * scale, z * scale) * amplitude;
         }
       }  
     }
@@ -254,6 +254,7 @@ for(x = 0; x < chunk_width-1; x++){
 }
 verts = result.vertices;
 norms = result.normals;
+console.log(verts.length);
 
 var globalScale = .65;
   for(i = 0; i < verts.length; i+=3){
