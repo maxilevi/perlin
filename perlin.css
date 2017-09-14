@@ -3,23 +3,27 @@
 	left:2.5%;
 }
 
-.scaleX{
-	top:25%;
-
-}
-
-.scaleY{
+.seed{
 	top:35%;
 
 }
 
-.scaleZ{
+.scale{
 	top:45%;
 
 }
 
-.dimensions{
+.amplitude{
+	top:55%;
+
+}
+
+.noiseType{
 	top:15%;
+}
+
+.dimensions{
+	top:25%;
 }
 
 .title{

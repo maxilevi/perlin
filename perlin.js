@@ -35,20 +35,26 @@ function RandomInt(min, max) {
 }
 
 function heightmap(){
-var type = $('#shape').val();
-var rng = RandomInt(-80000, 80000);
+  var type = $('#dimension').val();
+  var rng = RandomInt(-80000, 80000);
 
-  for(x = 0; x < chunk_width; x++){
-    for(z = 0; z < chunk_depth; z++){
-      for(y = 0; y < chunk_height; y++){
-
-      	var offsetX = chunk_width * .5, offsetZ = chunk_depth * .5, offsetY = chunk_height * .5, size = 16;
-      	var _y = y - offsetY, _x = x - offsetX, _z = z - offsetZ;
+  if(type == "2 Dimensional")
+    for(x = 0; x < chunk_width; x++){
+      for(z = 0; z < chunk_depth; z++){
         var height = Math.abs(noise.simplex2( (x+rng) * 0.025, (z+rng) * 0.025)) * (chunk_height-1);
-
-      	voxels[x][y][z] = (height-y); 
-      }
-    }  
+        for(y = 0; y < chunk_height; y++){
+        	voxels[x][y][z] = (height-y); 
+        }
+      }  
+    }
+  }else if("2 Dimensional"){
+    for(x = 0; x < chunk_width; x++){
+      for(z = 0; z < chunk_depth; z++){
+        for(y = 0; y < chunk_height; y++){
+          voxels[x][y][z] = Math.abs(noise.simplex3( (x+rng) * scale, (y+rng) * scale, (z+rng) * scale)); 
+        }
+      }  
+    }
   }
 }
 

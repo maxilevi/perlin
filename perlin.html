@@ -18,13 +18,17 @@
 
   <body>
   	<h2 class = "ui title">Perlin Noise</h2>
-    <select id="dimensions" onchange="recreate();" class="ui dimensions selectpicker" data-style="btn-default">
+    <select id="noiseType" onchange="recreate();" class="ui noiseType selectpicker" data-style="btn-default">
+      <option value="Perlin Noise">Perlin Noise</option>
+      <option value="Simplex Noise">Simplex Noise</option>
+    </select>
+    <select id="dimension" onchange="recreate();" class="ui dimensions selectpicker" data-style="btn-default">
       <option value="2 Dimensional">2 Dimensional</option>
       <option value="3 Dimensional">3 Dimensional</option>
     </select>
-  	<input type="text" id="scaleX" class="ui scaleX"></input>
-    <input type="text" id="scaleY" class="ui scaleY"></input>
-    <input type="text" id="scaleZ" class="ui scaleZ"></input>
+  	<input type="text" id="seed" class="ui seed"></input>
+    <input type="text" id="scale" class="ui scale"></input>
+    <input type="text" id="amplitude" class="ui amplitude"></input>
   	<a href="https://github.com/Zaphyk/perlin" target="_blank">
 	  	<i class="ui source fa fa-github" aria-hidden="true"></i>
   	</a>
