@@ -35,6 +35,11 @@
 	text-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
 }
 
+.time-spent{
+	font-weight:bold;
+	text-shadow: 2px 4px 8px rgba(0, 0, 0, .5);
+}
+
 .source{
 	font-size: 150px;
 	left:88%;
