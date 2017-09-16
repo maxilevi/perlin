@@ -1,4 +1,4 @@
-# isosurface
+# perlin
 webGL demo for testing perlin noise in realtime
 
 ## live demo
