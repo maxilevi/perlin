@@ -7,6 +7,7 @@ webGL demo for testing perlin noise in realtime
 
 ## screenshots
 
+![](img/shot2.png)
 ![](img/shot0.png)
 
 ## license
