@@ -20,7 +20,8 @@ for(x = 0; x < chunk_width; x++){
 
 heightmap();
 
-var rng = RandomInt(-8000000, 8000000);
+var rng = RandomInt(1, 65536);
+noise.seed(rng);
 document.getElementById('seed').value = rng;
 
 function recreate(){
@@ -43,9 +44,12 @@ function heightmap(){
   var noiseType = $('#noiseType').val();
   var scale = parseFloat( $('#scale').val() ), amplitude = parseFloat( $('#amplitude').val());
   var rng = $('#seed').val();
-    console.log(scale);
+  if(rng >= 65536)
+    document.getElementById('seed').value = 65536;
+  if(rng < 1)
+    document.getElementById('seed').value = 1;
 
-  noise.seed = rng;
+  noise.seed(rng);
 
   var t0 = performance.now();
 
@@ -255,7 +259,6 @@ for(x = 0; x < chunk_width-1; x++){
 }
 verts = result.vertices;
 norms = result.normals;
-console.log(verts.length);
 
 var globalScale = .65;
   for(i = 0; i < verts.length; i+=3){
