@@ -33,12 +33,14 @@
     </div>
 
     <div class="ui scale input-text">
-      <span class="classy-text">Scale</span>
-      <input type="text" class="form-control" id="scale" value='0.07' onchange="recreate();">
+        <span class="classy-text">Scale</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.07" id="scale" onchange="recreate();" />
+        <input type="text" class="form-control" id="scale-value" value='0.07' disabled>
     </div>
     <div class="ui amplitude input-text">
-      <span class="classy-text">Amplitude</span>
-      <input type="text" class="form-control" id="amplitude" value='12' onchange="recreate();">
+        <span class="classy-text">Amplitude</span>
+        <input type="range" min="-24" max="24" step="1" value="12" id="amplitude" onchange="recreate();" />
+        <input type="text" class="form-control" id="amplitude-value" value='12' disabled>
     </div>
     <div class="ui stats input-text">
       <span id="timeSpent" class="classy-text bold" ></span>
