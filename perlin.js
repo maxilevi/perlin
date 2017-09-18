@@ -25,6 +25,10 @@ noise.seed(rng);
 document.getElementById('seed').value = rng;
 
 function recreate(){
+    //display value
+    $('#scale-value').val($('#scale').val());
+    $('#amplitude-value').val($('#amplitude').val());
+    //-----------------------
 	heightmap(); 
 	buffers = initBuffers(global_gl);
 }
