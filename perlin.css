@@ -14,7 +14,7 @@
 }
 
 .amplitude{
-	top:55%;
+	top:55vh;
 }
 
 .noiseType{
@@ -36,42 +36,6 @@
 	height:40%;	
 }
 
-@media only screen and (max-device-width: 768px) {
-	
-	.title{
-		font-size: 60px;
-		left:2.5vh;	
-	}
-	
-	.source{
-		font-size: 300px;
-		left:20vh;
-		top:75vh;
-		text-align: center;
-		padding-bottom: 5px; 
-		border-radius: 150px;
-		width: 295px;
-		height: 295px;
-	}
-	
-	.march{
-		top:65vh;
-		height:40px;
-		left: 35vh;
-	}
-	
-	.shape{
-		left: 12.5vh;
-		top:65vh;
-		font-size:40px;
-	}
-	
-	.render{
-		position:absolute;
-		top: 12.5vh;	
-	}
-	
-}
 
 .title{
 	text-align: center;
@@ -227,4 +191,50 @@ input[type=range]:focus::-ms-track {
 
 input[type=range]:focus::-moz-range-track {
 	background: #ccc;
+}
+
+
+@media only screen and (max-device-width: 768px) {
+	
+	.title{
+		font-size: 60px;
+		left:10vh;	
+	}
+	
+	.source{
+		font-size: 300px;
+		left:22.5vh;
+		top:75vh;
+		text-align: center;
+		padding-bottom: 5px; 
+		border-radius: 150px;
+		width: 295px;
+		height: 295px;
+	}
+	
+	.scale{
+		left: 13.5vh;
+		top:55vh;
+	}
+	
+	.noiseType{
+		left: 29vh;
+		top:56.15vh;
+	}
+	
+	.dimensions{
+		left: 42vh;
+		top:56.15vh;
+	}
+	
+	.render{
+		position:absolute;
+		top: 12.5vh;	
+	}
+	
+	.stats{
+		text-align:center;
+		font-size: 30px;	
+	}
+	
 }
